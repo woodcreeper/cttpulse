@@ -5,6 +5,7 @@ import SwiftUI
 struct DetailView: View {
     @ObservedObject var store: TelemetryStore
     let checkIn: TelemetryCheckIn
+    private let titlebarClearance: CGFloat = 58
 
     var body: some View {
         ScrollView {
@@ -13,9 +14,11 @@ struct DetailView: View {
                 mapCard
                 metadataCard
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+            .padding(.top, 24 + titlebarClearance)
         }
-        .navigationTitle(checkIn.displayName)
+        .navigationTitle("")
         .task(id: checkIn.id) {
             await store.loadLocations(for: checkIn)
         }
