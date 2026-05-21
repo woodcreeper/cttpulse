@@ -12,7 +12,12 @@ Official Apple references:
 
 ## Current State
 
-The repo currently builds a local development app from SwiftPM:
+The repo has two supported build paths:
+
+- SwiftPM for fast local development and tests.
+- `CTT Pulse.xcodeproj` for Xcode signing, archiving, validation, and App Store Connect upload.
+
+The SwiftPM development app still builds with:
 
 ```bash
 ./script/build_and_run.sh
@@ -24,7 +29,14 @@ That script stages:
 dist/CTT Pulse.app
 ```
 
-This is useful for development and manual QA, but it is not yet a Mac App Store archive. The local bundle is ad-hoc signed and does not include an App Store provisioning profile or Team ID.
+This is useful for development and manual QA, but it is not the Mac App Store archive. The local SwiftPM bundle is ad-hoc signed and does not include an App Store provisioning profile or Team ID.
+
+The Xcode project builds the real app target with:
+
+```bash
+xcodebuild -scheme "CTT Pulse" -configuration Debug -destination 'platform=macOS' build
+xcodebuild -scheme "CTT Pulse" -configuration Release -destination 'platform=macOS' build
+```
 
 ## Added App Store Prep
 
@@ -65,32 +77,27 @@ Warnings are expected until the App Store project/signing work is complete.
 
 1. Apple Developer Program membership.
 2. App Store Connect app record for CTT Pulse.
-3. Final bundle identifier, likely `com.celltracktech.CTTPulse` or another organization-owned ID.
+3. Final bundle identifier. The Xcode target currently uses `com.celltracktech.CTTPulse`.
 4. Mac App Store signing certificate/provisioning profile.
-5. A real Xcode app target/archive workflow.
-6. App icon asset set.
-7. App category, version, build number, copyright, and support URLs.
-8. Privacy policy URL and completed App Store privacy questionnaire.
-9. Screenshots for supported Mac display sizes.
-10. Review of App Sandbox compatibility.
+5. App icon asset set.
+6. App category, version, build number, copyright, and support URLs.
+7. Privacy policy URL and completed App Store privacy questionnaire.
+8. Screenshots for supported Mac display sizes.
+9. Review of App Sandbox compatibility.
 
-## Xcode Project Work
-
-The current SwiftPM package is clean for development, but App Store release should be driven by an Xcode app target so Xcode can archive, sign, validate, and upload the app.
-
-Recommended structure:
+## Xcode Project
 
 ```text
-CTTPulse.xcodeproj
-  CTTPulse macOS app target
-    Bundle ID: organization-owned final ID
+CTT Pulse.xcodeproj
+  CTT Pulse macOS app target
+    Bundle ID: com.celltracktech.CTTPulse
     Sources: Sources/CTTPulseApp + Sources/CTTPulseCore
-    Resources: Resources/PrivacyInfo.xcprivacy + app icon assets
+    Resources: Resources/PrivacyInfo.xcprivacy
     Entitlements: Config/AppStore/CTTPulse.entitlements
-    Signing: automatic, Apple Developer team
+    Signing: automatic, Apple Developer team 33XYKMGGZ7
 ```
 
-Keep the SwiftPM package as the source of truth for tests and fast local development. The Xcode project should be the release wrapper around the same source files.
+Keep the SwiftPM package as the source of truth for tests and fast local development. The Xcode project is the release wrapper around the same source files.
 
 ## App Review Risks To Validate
 
@@ -105,8 +112,9 @@ Before uploading the first build:
 
 ```bash
 swift test
+xcodebuild -scheme "CTT Pulse" -configuration Release -destination 'platform=macOS' build
 ./script/build_and_run.sh --verify
 ./script/app_store_preflight.sh --strict
 ```
 
-Then archive and upload from Xcode using Product -> Archive once the Xcode project, signing team, bundle ID, and App Store Connect app record are ready.
+Then archive and upload from Xcode using Product -> Archive once the App Store Connect app record, signing certificate/profile, icon, privacy details, and screenshots are ready.

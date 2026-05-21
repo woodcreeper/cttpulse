@@ -111,6 +111,12 @@ The app is intentionally dependency-light and currently uses only Apple framewor
 
 The script builds the Swift package, stages `dist/CTT Pulse.app`, and launches it as a menu-bar/accessory app.
 
+The App Store/Xcode target can be built with:
+
+```bash
+xcodebuild -scheme "CTT Pulse" -configuration Debug -destination 'platform=macOS' build
+```
+
 Other useful modes:
 
 ```bash

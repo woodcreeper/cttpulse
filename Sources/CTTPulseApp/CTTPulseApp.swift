@@ -1,6 +1,9 @@
 import AppKit
 import SwiftUI
+
+#if SWIFT_PACKAGE
 import CTTPulseCore
+#endif
 
 @main
 struct CTTPulseApplication: App {

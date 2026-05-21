@@ -9,6 +9,7 @@ dist/
 DerivedData/
 
 # Xcode/user-local state
+xcuserdata/
 *.xcuserdata/
 *.xcuserstate
 *.moved-aside

@@ -18,8 +18,9 @@ public enum KeychainTokenStoreError: LocalizedError, Equatable {
 }
 
 public final class KeychainTokenStore: @unchecked Sendable {
-    public static let defaultService = "com.davidlapuma.CTTPulse.ctt.v1"
+    public static let defaultService = "com.celltracktech.CTTPulse.ctt.v1"
     private static let defaultLegacyServices = [
+        "com.davidlapuma.CTTPulse.ctt.v1",
         "com.davidlapuma.TelemetryIsland.ctt.v2",
         "com.davidlapuma.TelemetryIsland.ctt"
     ]
