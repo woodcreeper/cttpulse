@@ -120,7 +120,7 @@ struct DetailView: View {
             GridRow {
                 Text("Latest Location")
                     .foregroundStyle(.secondary)
-                Text(checkIn.latestLocationAt?.formatted(date: .abbreviated, time: .standard) ?? "No location timestamp")
+                Text(latestLocationMetadata)
             }
 
             GridRow {
@@ -157,5 +157,17 @@ struct DetailView: View {
         }
 
         return "\(locations.count) points - latest \(primary.fixTypeLabel)"
+    }
+
+    private var latestLocationMetadata: String {
+        if let latest = store.locations(for: checkIn).first {
+            return "\(latest.fixTypeLabel) at \(latest.fixAt.formatted(date: .abbreviated, time: .standard))"
+        }
+
+        if let latestLocationAt = checkIn.latestLocationAt {
+            return latestLocationAt.formatted(date: .abbreviated, time: .standard)
+        }
+
+        return "No location timestamp"
     }
 }
