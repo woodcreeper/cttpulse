@@ -1,0 +1,39 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# SwiftPM and build output
+.build/
+.swiftpm/
+dist/
+DerivedData/
+
+# Xcode/user-local state
+*.xcuserdata/
+*.xcuserstate
+*.moved-aside
+
+# Logs and local diagnostics
+*.log
+*.trace
+
+# Local environment files and credentials
+.env
+.env.*
+!.env.example
+Local.xcconfig
+Secrets.xcconfig
+*.local.xcconfig
+*.keychain
+*.p8
+*.p12
+*.pem
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+
+# macOS packaging artifacts
+*.dmg
+*.pkg
+*.zip
