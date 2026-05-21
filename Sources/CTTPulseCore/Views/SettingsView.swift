@@ -103,7 +103,7 @@ public struct SettingsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("Telemetry Settings")
+            Text("CTT Pulse Settings")
                 .font(.title2.weight(.bold))
 
             Text("CTT API polling runs every 15 minutes. Tokens stay in this app's Keychain item.")

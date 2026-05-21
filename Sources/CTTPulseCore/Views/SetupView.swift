@@ -12,7 +12,7 @@ struct SetupView: View {
                 .foregroundStyle(.cyan)
 
             VStack(spacing: 8) {
-                Text("Connect CTT Telemetry")
+                Text("Connect CTT Pulse")
                     .font(.largeTitle.weight(.bold))
 
                 Text("Paste your CTT Personal Access Token. It will be stored in Keychain.")

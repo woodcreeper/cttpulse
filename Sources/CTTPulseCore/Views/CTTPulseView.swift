@@ -146,7 +146,7 @@ public struct CTTPulseView: View {
             statusDot
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("Telemetry")
+                Text("CTT Pulse")
                     .font(.system(size: 15, weight: .semibold))
                 Text(headerSubtitle)
                     .font(.caption2.weight(.medium))
@@ -210,7 +210,7 @@ public struct CTTPulseView: View {
     private var recentModule: some View {
         IslandModule {
             VStack(alignment: .leading, spacing: 7) {
-                Text("Recent")
+                Text("Latest")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -384,7 +384,7 @@ public struct CTTPulseView: View {
             return store.isConfigured ? "Waiting for CTT data" : "PAT required"
         }
 
-        return "\(store.checkIns.count) recent check-ins"
+        return "\(store.checkIns.count) monitored devices"
     }
 
     private var islandLocationTaskID: String {

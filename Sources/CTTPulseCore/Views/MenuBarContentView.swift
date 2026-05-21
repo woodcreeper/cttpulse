@@ -25,7 +25,7 @@ public struct MenuBarContentView: View {
             Button {
                 coordinator.showMainWindow()
             } label: {
-                Label("Open Telemetry", systemImage: "list.bullet.rectangle")
+                Label("Open CTT Pulse", systemImage: "list.bullet.rectangle")
             }
 
             Button {

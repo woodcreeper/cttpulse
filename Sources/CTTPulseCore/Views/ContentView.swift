@@ -43,7 +43,7 @@ public struct ContentView: View {
                 }
             }
             .listStyle(.sidebar)
-            .navigationTitle("Telemetry")
+            .navigationTitle("CTT Pulse")
             .toolbar {
                 ToolbarItem {
                     Button {

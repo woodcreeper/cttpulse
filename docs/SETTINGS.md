@@ -33,6 +33,8 @@ Behavior:
 - The island, main window, and alerts only use selected devices.
 - Hidden devices are still observed internally for last-seen timestamp updates, preventing old alerts from replaying if a device is re-enabled later.
 
+The island header count is based on the filtered monitoring list. It does not count every accessible project/device on the token. It also should not be read as "fresh alerts right now"; it is the number of selected monitored devices with a latest known record. The island's Latest list is sorted by each selected device's latest known check-in time.
+
 Use cases:
 
 - monitor only active field deployments,
