@@ -13,6 +13,8 @@ CTT Pulse is designed so users can clone, build, and run the app without putting
 - Tokens are not written to URLs.
 - Tokens should not be logged.
 
+CTT Pulse also supports a one-time local migration from legacy Telemetry Island Keychain service names into the current CTT Pulse Keychain service. The token remains inside Keychain during that migration. macOS may ask the user to allow Keychain access if the old item cannot be read silently.
+
 ## Files That Must Not Be Committed
 
 Do not commit:

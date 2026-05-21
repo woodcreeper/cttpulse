@@ -49,6 +49,8 @@ To verify the app launched:
 
 The token is stored in the macOS Keychain. It is not written to the repository, UserDefaults, logs, or URLs.
 
+If you previously used a development build named Telemetry Island, CTT Pulse will try to migrate that older Keychain token into the stable CTT Pulse Keychain service on launch. If macOS cannot read the old item silently, it may show a one-time Keychain access dialog. Choose Allow or Always Allow to let CTT Pulse copy the token. If macOS denies access to the old item, save the PAT once in CTT Pulse Settings and future launches should reuse it.
+
 ## Updating
 
 Pull the latest source and relaunch:

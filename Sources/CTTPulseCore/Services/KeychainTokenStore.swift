@@ -18,45 +18,59 @@ public enum KeychainTokenStoreError: LocalizedError, Equatable {
 }
 
 public final class KeychainTokenStore: @unchecked Sendable {
+    public static let defaultService = "com.davidlapuma.CTTPulse.ctt.v1"
+    private static let defaultLegacyServices = [
+        "com.davidlapuma.TelemetryIsland.ctt.v2",
+        "com.davidlapuma.TelemetryIsland.ctt"
+    ]
+
     private let service: String
     private let account: String
+    private let legacyServices: [String]
 
     public init(
-        service: String = "com.davidlapuma.CTTPulse.ctt.v1",
-        account: String = "personal-access-token"
+        service: String = KeychainTokenStore.defaultService,
+        account: String = "personal-access-token",
+        legacyServices: [String]? = nil
     ) {
         self.service = service
         self.account = account
+        self.legacyServices = legacyServices ?? (service == Self.defaultService ? Self.defaultLegacyServices : [])
     }
 
     public func loadToken() throws -> String? {
-        var query = baseQuery()
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        do {
+            if let token = try readToken(service: service, allowInteraction: false) {
+                return token
+            }
+        } catch {
+            if shouldRetryWithUserInteraction(error),
+               let token = try readToken(service: service, allowInteraction: true) {
+                return token
+            }
 
-        let context = LAContext()
-        context.interactionNotAllowed = true
-        query[kSecUseAuthenticationContext as String] = context
-
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        if status == errSecItemNotFound {
-            return nil
+            throw error
         }
 
-        guard status == errSecSuccess else {
-            throw KeychainTokenStoreError.unexpectedStatus(status)
+        for legacyService in legacyServices {
+            guard let token = try? readToken(service: legacyService, allowInteraction: false), !token.isEmpty else {
+                continue
+            }
+
+            try? saveToken(token)
+            return token
         }
 
-        guard
-            let data = result as? Data,
-            let token = String(data: data, encoding: .utf8)
-        else {
-            throw KeychainTokenStoreError.invalidData
+        for legacyService in legacyServices {
+            guard let token = try? readToken(service: legacyService, allowInteraction: true), !token.isEmpty else {
+                continue
+            }
+
+            try? saveToken(token)
+            return token
         }
 
-        return token
+        return nil
     }
 
     public func saveToken(_ token: String) throws {
@@ -79,9 +93,17 @@ public final class KeychainTokenStore: @unchecked Sendable {
     }
 
     public func deleteToken() throws {
-        let status = SecItemDelete(baseQuery() as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainTokenStoreError.unexpectedStatus(status)
+        var firstUnexpectedStatus: OSStatus?
+
+        for serviceName in [service] + legacyServices {
+            let status = SecItemDelete(baseQuery(service: serviceName) as CFDictionary)
+            if status != errSecSuccess, status != errSecItemNotFound, firstUnexpectedStatus == nil {
+                firstUnexpectedStatus = status
+            }
+        }
+
+        if let firstUnexpectedStatus {
+            throw KeychainTokenStoreError.unexpectedStatus(firstUnexpectedStatus)
         }
     }
 
@@ -89,10 +111,50 @@ public final class KeychainTokenStore: @unchecked Sendable {
         (try? loadToken())?.isEmpty == false
     }
 
-    private func baseQuery() -> [String: Any] {
+    private func readToken(service: String, allowInteraction: Bool) throws -> String? {
+        var query = baseQuery(service: service)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        if !allowInteraction {
+            let context = LAContext()
+            context.interactionNotAllowed = true
+            query[kSecUseAuthenticationContext as String] = context
+        }
+
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        if status == errSecItemNotFound {
+            return nil
+        }
+
+        guard status == errSecSuccess else {
+            throw KeychainTokenStoreError.unexpectedStatus(status)
+        }
+
+        guard
+            let data = result as? Data,
+            let token = String(data: data, encoding: .utf8)
+        else {
+            throw KeychainTokenStoreError.invalidData
+        }
+
+        return token
+    }
+
+    private func shouldRetryWithUserInteraction(_ error: Error) -> Bool {
+        guard case let KeychainTokenStoreError.unexpectedStatus(status) = error else {
+            return false
+        }
+
+        return status == errSecInteractionNotAllowed || status == errSecAuthFailed
+    }
+
+    private func baseQuery(service: String? = nil) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
+            kSecAttrService as String: service ?? self.service,
             kSecAttrAccount as String: account
         ]
     }
