@@ -11,6 +11,7 @@ This is a macOS app, not an iOS Dynamic Island or ActivityKit app. The island is
 - Opens into a small translucent telemetry pane with the latest selected check-in, a scrollable recent list, and a mini map.
 - Provides a main detail window with a recent check-in sidebar, selected device metadata, and a larger MapKit map.
 - Lets the user choose which CTT projects/devices are included in the app and alerts.
+- Lets the user choose whether alerts appear in the CTT Pulse island, macOS Notification Center, or both.
 - Stores the CTT Personal Access Token in Keychain.
 - Detects fresh check-ins without replaying stale alerts on launch.
 
@@ -25,6 +26,15 @@ This is a macOS app, not an iOS Dynamic Island or ActivityKit app. The island is
 - Recent list is clickable and scrollable.
 - Selecting a row updates the island header and mini map.
 - Fresh selected/new check-ins can pulse the island edge.
+
+### Notifications
+
+- In-app alerts appear as a compact island pulse near the notch.
+- By default, in-app alerts auto-hide after 12 seconds.
+- A setting can keep in-app alerts visible until the island is closed.
+- Optional macOS notifications use Notification Center banners outside the app.
+- Notification events can be enabled separately for fresh tag check-ins and newly discovered monitored tags.
+- macOS controls external banner style and persistence through System Settings.
 
 ### CTT Data Loading
 
@@ -156,11 +166,13 @@ Sources/CTTPulseCore/App/
 Sources/CTTPulseCore/Services/
   CTTAPIClient.swift             URLSession API client and pagination
   KeychainTokenStore.swift       Secure token storage
+  MacNotificationCenter.swift    Notification Center delivery bridge
 
 Sources/CTTPulseCore/Stores/
   TelemetryStore.swift           Polling, normalization, alerts, locations, battery fallback
   TelemetryFilterStore.swift     Persisted project/device inclusion filters
   LastSeenConnectionStore.swift  Persisted last-seen check-in timestamps
+  NotificationPreferencesStore.swift Persisted alert display and event preferences
 
 Sources/CTTPulseCore/Views/
   CTTPulseView.swift      Compact/expanded notch island UI
@@ -178,6 +190,7 @@ Sources/CTTPulseCore/Support/
 
 Tests/CTTPulseCoreTests/
   CTTDecodingTests.swift
+  NotificationPreferencesStoreTests.swift
   TelemetryLocationFilterTests.swift
   TelemetryStoreTests.swift
 ```

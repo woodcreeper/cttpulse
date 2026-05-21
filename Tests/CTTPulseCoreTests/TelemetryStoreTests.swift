@@ -37,6 +37,7 @@ struct TelemetryStoreTests {
 
         #expect(store.checkIns.count == 1)
         #expect(store.latestNewCount == 0)
+        #expect(store.latestNotificationBatch == nil)
         #expect(store.checkIns[0].isNew == false)
         #expect(store.checkIns[0].kind == .connection)
 
@@ -54,12 +55,15 @@ struct TelemetryStoreTests {
         await store.refresh(reason: .scheduled)
 
         #expect(store.latestNewCount == 1)
+        #expect(store.latestNotificationBatch?.events.map(\.kind) == [.checkIn])
+        #expect(store.latestNotificationBatch?.events.first?.title == "Tern 12 checked in")
         #expect(store.checkIns[0].isNew == true)
         #expect(store.checkIns[0].connectionAt == TelemetryDateFormatter.parseISO8601("2026-05-20T12:15:00Z"))
 
         await store.refresh(reason: .scheduled)
 
         #expect(store.latestNewCount == 0)
+        #expect(store.latestNotificationBatch == nil)
         #expect(store.checkIns[0].isNew == false)
     }
 
@@ -356,6 +360,7 @@ struct TelemetryStoreTests {
         await store.refresh(reason: .scheduled)
 
         #expect(store.latestNewCount == 0)
+        #expect(store.latestNotificationBatch == nil)
         #expect(store.checkIns[0].isNew == false)
     }
 
@@ -383,6 +388,8 @@ struct TelemetryStoreTests {
         await store.refresh(reason: .scheduled)
 
         #expect(store.latestNewCount == 1)
+        #expect(store.latestNotificationBatch?.events.map(\.kind) == [.newTag])
+        #expect(store.latestNotificationBatch?.events.first?.title == "New tag added")
         #expect(store.checkIns[0].isNew == true)
     }
 

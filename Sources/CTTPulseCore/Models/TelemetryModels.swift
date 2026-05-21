@@ -120,6 +120,51 @@ public struct TelemetryBatteryReading: Hashable {
     public let readAt: Date
 }
 
+public struct TelemetryNotificationBatch: Identifiable, Hashable {
+    public let id: UUID
+    public let events: [TelemetryNotificationEvent]
+
+    public init(id: UUID = UUID(), events: [TelemetryNotificationEvent]) {
+        self.id = id
+        self.events = events
+    }
+}
+
+public struct TelemetryNotificationEvent: Identifiable, Hashable {
+    public enum Kind: String, Hashable {
+        case newTag
+        case checkIn
+    }
+
+    public let id: String
+    public let kind: Kind
+    public let checkIn: TelemetryCheckIn
+
+    public init(kind: Kind, checkIn: TelemetryCheckIn) {
+        self.kind = kind
+        self.checkIn = checkIn
+        self.id = "\(kind.rawValue)|\(checkIn.id)"
+    }
+
+    public var title: String {
+        switch kind {
+        case .newTag:
+            "New tag added"
+        case .checkIn:
+            "\(checkIn.displayName) checked in"
+        }
+    }
+
+    public var body: String {
+        switch kind {
+        case .newTag:
+            "\(checkIn.displayName) is now monitored in \(checkIn.projectName). Latest connection: \(TelemetryDateFormatter.relative(checkIn.connectionAt))."
+        case .checkIn:
+            "\(checkIn.projectName) - \(TelemetryDateFormatter.relative(checkIn.connectionAt))"
+        }
+    }
+}
+
 public enum RefreshReason: Equatable {
     case launch
     case manual

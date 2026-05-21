@@ -5,7 +5,7 @@ import SwiftUI
 final class SettingsWindowController {
     private var window: NSWindow?
 
-    func show(store: TelemetryStore) {
+    func show(store: TelemetryStore, notificationPreferences: NotificationPreferencesStore) {
         if window == nil {
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 760, height: 620),
@@ -19,7 +19,9 @@ final class SettingsWindowController {
             window.isMovableByWindowBackground = true
             window.backgroundColor = .clear
             window.isOpaque = false
-            window.contentView = NSHostingView(rootView: SettingsView(store: store))
+            window.contentView = NSHostingView(
+                rootView: SettingsView(store: store, notificationPreferences: notificationPreferences)
+            )
             window.isReleasedWhenClosed = false
             window.center()
             self.window = window

@@ -8,12 +8,14 @@ public final class AppCoordinator: ObservableObject {
     public static let shared = AppCoordinator()
 
     public let store: TelemetryStore
+    public let notificationPreferences: NotificationPreferencesStore
     public let islandState = IslandPanelState()
 
     private let islandPanelController = IslandPanelController()
     private let notchHoverMonitor = NotchHoverMonitor()
     private let mainWindowController = MainWindowController()
     private let settingsWindowController = SettingsWindowController()
+    private let macNotificationCenter = MacNotificationCenter()
     private var cancellables: Set<AnyCancellable> = []
     private var islandAutoHideTask: Task<Void, Never>?
     private var hoverHideTask: Task<Void, Never>?
@@ -22,6 +24,7 @@ public final class AppCoordinator: ObservableObject {
     private init() {
         let tokenStore = KeychainTokenStore()
         let apiClient = CTTAPIClient(tokenStore: tokenStore)
+        self.notificationPreferences = NotificationPreferencesStore()
         self.store = TelemetryStore(apiClient: apiClient, tokenStore: tokenStore)
     }
 
@@ -40,10 +43,10 @@ public final class AppCoordinator: ObservableObject {
             )
         )
 
-        store.$pulseID
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.showIslandForNewCheckIn()
+        store.$latestNotificationBatch
+            .compactMap { $0 }
+            .sink { [weak self] batch in
+                self?.handleNotificationBatch(batch)
             }
             .store(in: &cancellables)
 
@@ -75,7 +78,7 @@ public final class AppCoordinator: ObservableObject {
     public func showSettingsWindow() {
         hoverHideTask?.cancel()
         islandState.hide()
-        settingsWindowController.show(store: store)
+        settingsWindowController.show(store: store, notificationPreferences: notificationPreferences)
     }
 
     public func refreshNow() {
@@ -92,12 +95,25 @@ public final class AppCoordinator: ObservableObject {
         }
     }
 
-    private func showIslandForNewCheckIn() {
-        guard store.latestNewCount > 0 else { return }
+    private func handleNotificationBatch(_ batch: TelemetryNotificationBatch) {
+        let events = batch.events.filter { notificationPreferences.includes($0) }
+        guard !events.isEmpty else { return }
 
+        if notificationPreferences.showInAppAlerts {
+            showIslandForNotification(persistent: notificationPreferences.keepInAppAlertsVisible)
+        }
+
+        if notificationPreferences.showMacOSNotifications {
+            Task { await macNotificationCenter.deliver(events) }
+        }
+    }
+
+    private func showIslandForNotification(persistent: Bool) {
         islandAutoHideTask?.cancel()
         hoverHideTask?.cancel()
         islandState.show(expanded: false)
+
+        guard !persistent else { return }
 
         islandAutoHideTask = Task { [weak self] in
             do {

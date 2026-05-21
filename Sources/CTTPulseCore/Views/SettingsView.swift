@@ -2,10 +2,12 @@ import SwiftUI
 
 public struct SettingsView: View {
     @ObservedObject private var store: TelemetryStore
+    @ObservedObject private var notificationPreferences: NotificationPreferencesStore
     @State private var token = ""
 
-    public init(store: TelemetryStore) {
+    public init(store: TelemetryStore, notificationPreferences: NotificationPreferencesStore) {
         self.store = store
+        self.notificationPreferences = notificationPreferences
     }
 
     public var body: some View {
@@ -18,6 +20,11 @@ public struct SettingsView: View {
             filtersPane
                 .tabItem {
                     Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
+                }
+
+            notificationsPane
+                .tabItem {
+                    Label("Notifications", systemImage: "bell.badge")
                 }
         }
         .padding(.horizontal, 22)
@@ -101,6 +108,82 @@ public struct SettingsView: View {
         .padding(.top, 8)
     }
 
+    private var notificationsPane: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Notifications")
+                    .font(.title2.weight(.bold))
+
+                Text("Choose where CTT Pulse alerts appear and which telemetry events should notify you.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
+            notificationCard(title: "Where alerts appear") {
+                Toggle(isOn: $notificationPreferences.showInAppAlerts) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show in CTT Pulse")
+                        Text("Pulse and reveal the island when selected monitored tags notify.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.checkbox)
+
+                Toggle(isOn: $notificationPreferences.keepInAppAlertsVisible) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Keep in-app alerts visible until dismissed")
+                        Text("The island stays visible until you close it instead of auto-hiding after 12 seconds.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.checkbox)
+                .disabled(!notificationPreferences.showInAppAlerts)
+
+                Toggle(isOn: $notificationPreferences.showMacOSNotifications) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show macOS notifications")
+                        Text("Use Notification Center banners outside the CTT Pulse window. macOS controls banner persistence.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.checkbox)
+            }
+
+            notificationCard(title: "Events") {
+                Toggle(isOn: $notificationPreferences.notifyOnCheckIns) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tag check-ins")
+                        Text("Notify when a monitored tag's latest connection advances within the fresh alert window.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.checkbox)
+
+                Toggle(isOn: $notificationPreferences.notifyOnNewTags) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("New monitored tags")
+                        Text("Notify when a new selected tag first appears after the initial app seed.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.checkbox)
+            }
+
+            Text("Current in-app alert: a compact island pulse near the notch showing the selected/latest tag. External alerts use standard macOS notification banners with the tag name, project, and check-in context.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 8)
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text("CTT Pulse Settings")
@@ -143,6 +226,27 @@ public struct SettingsView: View {
             }
         }
         .padding(14)
+        .background(.thinMaterial, in: shape)
+        .glassEffect(.regular, in: shape)
+        .overlay {
+            shape.strokeBorder(.white.opacity(0.14), lineWidth: 1)
+        }
+    }
+
+    private func notificationCard<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+
+            content()
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial, in: shape)
         .glassEffect(.regular, in: shape)
         .overlay {

@@ -11,12 +11,14 @@ CTTPulseApp
     -> CTTAPIClient
     -> LastSeenConnectionStore
     -> TelemetryFilterStore
+    -> NotificationPreferencesStore
     -> TelemetryStore
+    -> MacNotificationCenter
     -> IslandPanelController
     -> MainWindowController / SettingsWindowController
 ```
 
-`AppCoordinator` is the composition root. It owns the shared stores and controllers, starts polling, and routes island/menu/settings/main-window actions.
+`AppCoordinator` is the composition root. It owns the shared stores and controllers, starts polling, and routes island/menu/settings/main-window actions. It also routes notification batches from `TelemetryStore` into the configured in-app island behavior and optional macOS Notification Center delivery.
 
 ## API Flow
 
@@ -36,7 +38,7 @@ Refresh sequence:
 4. Normalize into `TelemetryProject`, `TelemetryDevice`, and `TelemetryCheckIn`
 5. Apply persisted project/device filters
 6. Compare `latestConnectionAt` against `LastSeenConnectionStore`
-7. Pulse/alert only for selected devices whose new connection is fresh
+7. Emit notification events only for selected devices whose new connection is fresh, or newly discovered selected devices after the initial seed
 
 Location sequence is on demand:
 
@@ -54,7 +56,7 @@ Battery sequence is also on demand:
 
 `latestConnectionAt` is the canonical check-in signal. `latestLocationAt` is not used to fire check-in alerts because a device can connect without a GPS fix, and the user primarily wants connection awareness.
 
-The first successful refresh seeds `LastSeenConnectionStore` without alerting. Later refreshes can alert when:
+The first successful refresh seeds `LastSeenConnectionStore` without alerting. Later refreshes can emit a check-in notification when:
 
 - the device is included by filters,
 - the app has already seeded local state,
@@ -62,6 +64,16 @@ The first successful refresh seeds `LastSeenConnectionStore` without alerting. L
 - the connection is within the fresh alert window.
 
 The fresh alert window is currently 30 minutes. This prevents stale historical records from surfacing as new popups.
+
+New selected devices discovered after the initial seed emit a separate "new tag added" notification event. This is distinct from a normal fresh check-in, so users can turn either event class on or off.
+
+`NotificationPreferencesStore` persists display and event preferences in UserDefaults. The current display routes are:
+
+- in-app island pulse, auto-hidden after 12 seconds by default;
+- persistent in-app island pulse until dismissed;
+- optional macOS Notification Center banner through `MacNotificationCenter`.
+
+If both display routes are enabled, the same notification event is shown in both places. If both event types are disabled, refresh still updates app state but emits no user-facing notification.
 
 ## Filtering
 
@@ -117,6 +129,7 @@ Non-secrets:
 
 - last-seen connection timestamps live in UserDefaults through `LastSeenConnectionStore`;
 - filter selections live in UserDefaults through `TelemetryFilterStore`.
+- notification display and event preferences live in UserDefaults through `NotificationPreferencesStore`.
 
 Generated artifacts:
 
@@ -131,6 +144,8 @@ The test suite focuses on behavior that would otherwise regress silently:
 - Fresh/stale check-in detection.
 - First-poll seeding.
 - Filtered device visibility and alert suppression.
+- Notification event kind classification.
+- Notification preference persistence and event filtering.
 - Location coordinate validation.
 - 24-hour and historical location windows.
 - GPS-vs-cell-locate primary point selection.

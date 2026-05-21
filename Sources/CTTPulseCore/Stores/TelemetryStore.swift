@@ -22,6 +22,7 @@ public final class TelemetryStore: ObservableObject {
     @Published public private(set) var lastRefreshSummary = "Not refreshed yet"
     @Published public private(set) var pulseID = UUID()
     @Published public private(set) var latestNewCount = 0
+    @Published public private(set) var latestNotificationBatch: TelemetryNotificationBatch?
 
     private let apiClient: any CTTAPIProviding
     private let tokenStore: KeychainTokenStore
@@ -150,6 +151,8 @@ public final class TelemetryStore: ObservableObject {
         devices = []
         allCheckIns = []
         checkIns = []
+        latestNotificationBatch = nil
+        latestNewCount = 0
         locationsByIMEI = [:]
         locationSourcesByIMEI = [:]
         locationErrorsByIMEI = [:]
@@ -202,7 +205,7 @@ public final class TelemetryStore: ObservableObject {
 
             var allDevices: [TelemetryDevice] = []
             var snapshots: [DeviceSnapshot] = []
-            var newCount = 0
+            var notificationEvents: [TelemetryNotificationEvent] = []
             let hasSeeded = lastSeenStore.hasSeeded
             let alertCutoff = nowProvider().addingTimeInterval(-freshCheckInAlertWindow)
 
@@ -252,26 +255,29 @@ public final class TelemetryStore: ObservableObject {
                 let eventAt: Date
                 let kind: TelemetryCheckIn.Kind
                 let isNew: Bool
+                let notificationKind: TelemetryNotificationEvent.Kind?
 
                 if let latestConnectionAt {
                     let previousDate = lastSeenStore.date(for: key)
-                    isNew = filterStore.includes(device)
+                    let isSelected = filterStore.includes(device)
+                    let isNewTag = isSelected && hasSeeded && previousDate == nil
+                    let isFreshCheckIn = isSelected
                         && hasSeeded
-                        && (previousDate == nil || latestConnectionAt > previousDate!)
+                        && previousDate != nil
+                        && latestConnectionAt > previousDate!
                         && latestConnectionAt >= alertCutoff
+                    isNew = isNewTag || isFreshCheckIn
+                    notificationKind = isNewTag ? .newTag : isFreshCheckIn ? .checkIn : nil
                     eventAt = latestConnectionAt
                     kind = .connection
                     lastSeenStore.set(latestConnectionAt, for: key)
                 } else if let latestLocationAt {
                     isNew = false
+                    notificationKind = nil
                     eventAt = latestLocationAt
                     kind = .location
                 } else {
                     continue
-                }
-
-                if isNew {
-                    newCount += 1
                 }
 
                 let checkIn = TelemetryCheckIn(
@@ -287,6 +293,10 @@ public final class TelemetryStore: ObservableObject {
                     latestBatteryV: snapshot.latestBatteryV,
                     isNew: isNew
                 )
+
+                if let notificationKind {
+                    notificationEvents.append(TelemetryNotificationEvent(kind: notificationKind, checkIn: checkIn))
+                }
 
                 if let existing = latestByDevice[key] {
                     if checkIn.connectionAt > existing.connectionAt {
@@ -310,8 +320,11 @@ public final class TelemetryStore: ObservableObject {
             self.lastError = nil
             self.lastRefreshSummary = "Loaded \(projects.count) projects, \(allDevices.count) devices. \(filterSummary)."
 
-            latestNewCount = newCount
-            if newCount > 0 {
+            latestNewCount = notificationEvents.count
+            if notificationEvents.isEmpty {
+                latestNotificationBatch = nil
+            } else {
+                latestNotificationBatch = TelemetryNotificationBatch(events: notificationEvents)
                 pulseID = UUID()
             }
         } catch {

@@ -1,6 +1,6 @@
 # Settings
 
-CTT Pulse has two main settings areas: account/token setup and project/device filters.
+CTT Pulse has three main settings areas: account/token setup, project/device filters, and notifications.
 
 ## Account
 
@@ -54,6 +54,23 @@ The app alerts only when:
 - the new connection is fresh enough to matter.
 
 The current fresh-alert window is 30 minutes. Older connection changes are loaded into the UI but do not create popup/pulse alerts.
+
+## Notifications
+
+The Notifications section controls where alerts appear and which telemetry events are allowed to notify.
+
+Display options:
+
+- Show in CTT Pulse: pulses and reveals the compact island near the notch.
+- Keep in-app alerts visible until dismissed: leaves the island visible until the close control is used instead of auto-hiding after 12 seconds.
+- Show macOS notifications: sends standard Notification Center banners outside the app.
+
+Event options:
+
+- Tag check-ins: notify when a selected monitored device has a fresh `latestConnectionAt` advance.
+- New monitored tags: notify when a selected device first appears after the initial seed.
+
+By default, CTT Pulse uses in-app alerts only, auto-hides them after 12 seconds, and enables both event types. macOS banner persistence is controlled by macOS System Settings, not by CTT Pulse.
 
 ## Maps
 
