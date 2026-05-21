@@ -6,6 +6,7 @@ APP_NAME="CTTPulse"
 LEGACY_APP_NAME="TelemetryIsland"
 BUNDLE_NAME="CTT Pulse"
 BUNDLE_ID="com.celltracktech.CTTPulse"
+BUNDLE_ICON_FILE="CTTPulse"
 MIN_SYSTEM_VERSION="26.0"
 APP_VERSION="${CTTPULSE_VERSION:-0.1.0}"
 APP_BUILD="${CTTPULSE_BUILD:-1}"
@@ -50,6 +51,8 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$BUNDLE_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>$BUNDLE_ICON_FILE</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

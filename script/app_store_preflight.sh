@@ -6,6 +6,9 @@ APP_BUNDLE="$ROOT_DIR/dist/CTT Pulse.app"
 INFO_PLIST="$APP_BUNDLE/Contents/Info.plist"
 PRIVACY_MANIFEST="$APP_BUNDLE/Contents/Resources/PrivacyInfo.xcprivacy"
 ENTITLEMENTS="$ROOT_DIR/Config/AppStore/CTTPulse.entitlements"
+SOURCE_APP_ICONSET="$ROOT_DIR/Resources/Assets.xcassets/AppIcon.appiconset"
+SOURCE_LOCAL_ICON="$ROOT_DIR/Resources/CTTPulse.icns"
+BUILT_LOCAL_ICON="$APP_BUNDLE/Contents/Resources/CTTPulse.icns"
 STRICT="${1:-}"
 
 warnings=0
@@ -41,6 +44,8 @@ printf 'Root: %s\n\n' "$ROOT_DIR"
 require_file "$APP_BUNDLE" "Built app bundle"
 require_file "$INFO_PLIST" "Info.plist"
 require_file "$ENTITLEMENTS" "App Store entitlements"
+require_file "$SOURCE_APP_ICONSET" "Xcode app icon asset set"
+require_file "$SOURCE_LOCAL_ICON" "Local SwiftPM bundle icon"
 
 if [[ -e "$INFO_PLIST" ]]; then
   plutil -lint "$INFO_PLIST" >/dev/null
@@ -50,6 +55,21 @@ if [[ -e "$INFO_PLIST" ]]; then
       fail "Info.plist is missing $key"
     fi
   done
+
+  if [[ -z "$(plist_value CFBundleIconFile)" ]]; then
+    warn "Info.plist is missing CFBundleIconFile for the local SwiftPM bundle."
+  fi
+fi
+
+if [[ -d "$SOURCE_APP_ICONSET" ]]; then
+  icon_png_count="$(find "$SOURCE_APP_ICONSET" -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')"
+  if [[ "$icon_png_count" != "10" ]]; then
+    fail "AppIcon.appiconset should contain 10 macOS PNG renditions, found $icon_png_count"
+  fi
+fi
+
+if [[ -d "$APP_BUNDLE" && ! -e "$BUILT_LOCAL_ICON" ]]; then
+  warn "Built local app is missing CTTPulse.icns. Run ./script/build_and_run.sh after updating resources."
 fi
 
 if [[ -e "$ENTITLEMENTS" ]]; then

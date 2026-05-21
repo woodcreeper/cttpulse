@@ -43,6 +43,8 @@ xcodebuild -scheme "CTT Pulse" -configuration Release -destination 'platform=mac
 The repo includes these distribution prep files:
 
 - `Config/AppStore/CTTPulse.entitlements`
+- `Resources/Assets.xcassets/AppIcon.appiconset`
+- `Resources/CTTPulse.icns`
 - `Resources/PrivacyInfo.xcprivacy`
 - `script/app_store_preflight.sh`
 
@@ -79,7 +81,7 @@ Warnings are expected until the App Store project/signing work is complete.
 2. App Store Connect app record for CTT Pulse.
 3. Final bundle identifier. The Xcode target currently uses `com.celltracktech.CTTPulse`.
 4. Mac App Store signing certificate/provisioning profile.
-5. App icon asset set.
+5. Final review of the app icon and App Store marketing artwork.
 6. App category, version, build number, copyright, and support URLs.
 7. Privacy policy URL and completed App Store privacy questionnaire.
 8. Screenshots for supported Mac display sizes.
@@ -92,7 +94,7 @@ CTT Pulse.xcodeproj
   CTT Pulse macOS app target
     Bundle ID: com.celltracktech.CTTPulse
     Sources: Sources/CTTPulseApp + Sources/CTTPulseCore
-    Resources: Resources/PrivacyInfo.xcprivacy
+    Resources: Resources/Assets.xcassets + Resources/PrivacyInfo.xcprivacy
     Entitlements: Config/AppStore/CTTPulse.entitlements
     Signing: automatic, Apple Developer team 33XYKMGGZ7
 ```
