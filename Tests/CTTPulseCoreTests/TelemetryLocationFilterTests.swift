@@ -128,5 +128,6 @@ struct TelemetryLocationFilterTests {
 
         #expect(locations.first?.type == "cell_locate")
         #expect(locations.first?.fixTypeLabel == "Cell Locate")
+        #expect(locations.first?.coordinateLabel == "40.100000, -73.100000")
     }
 }

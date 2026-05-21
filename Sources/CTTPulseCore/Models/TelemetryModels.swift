@@ -108,6 +108,10 @@ public struct TelemetryLocation: Identifiable, Hashable {
     public var shortFixTypeLabel: String {
         isCellLocateFix ? "Cell" : fixTypeLabel
     }
+
+    public var coordinateLabel: String {
+        String(format: "%.6f, %.6f", latitude, longitude)
+    }
 }
 
 public enum TelemetryLocationSource: Hashable {

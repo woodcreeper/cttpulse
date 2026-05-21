@@ -121,6 +121,7 @@ struct DetailView: View {
                 Text("Latest Location")
                     .foregroundStyle(.secondary)
                 Text(latestLocationMetadata)
+                    .textSelection(.enabled)
             }
 
             GridRow {
@@ -161,7 +162,7 @@ struct DetailView: View {
 
     private var latestLocationMetadata: String {
         if let latest = store.locations(for: checkIn).first {
-            return "\(latest.fixTypeLabel) at \(latest.fixAt.formatted(date: .abbreviated, time: .standard))"
+            return "\(latest.coordinateLabel) - \(latest.fixTypeLabel) at \(latest.fixAt.formatted(date: .abbreviated, time: .standard))"
         }
 
         if let latestLocationAt = checkIn.latestLocationAt {
