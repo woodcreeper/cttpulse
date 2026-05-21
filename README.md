@@ -100,6 +100,7 @@ The app is intentionally dependency-light and currently uses only Apple framewor
 - [Installation](docs/INSTALLATION.md)
 - [Settings](docs/SETTINGS.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [App Store Distribution](docs/APP_STORE.md)
 - [Security](SECURITY.md)
 
 ## Run
@@ -205,6 +206,7 @@ Not yet completed:
 - Hardened runtime configuration.
 - Notarization.
 - Installer or DMG packaging.
+- Mac App Store Xcode archive/sign/upload workflow.
 - Auto-update mechanism.
 
 Those are the next steps before distributing this to other Mac users.
