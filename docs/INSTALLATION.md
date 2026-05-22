@@ -72,15 +72,23 @@ To remove the stored CTT token, use Settings -> Disconnect before deleting the a
 
 ## Distribution Status
 
-This repository has a repeatable Developer ID packaging workflow for double-click customer installs.
+This repository supports Developer ID distribution for double-click customer installs.
 
-Distribution maintainers should use:
+For manual releases, use Xcode:
+
+1. Open `CTT Pulse.xcodeproj`.
+2. Choose Product -> Archive.
+3. In Organizer, choose Distribute App.
+4. Export a Developer ID signed/notarized app.
+5. Package the exported app as a DMG.
+
+The repo also has an optional command-line packaging workflow for future automation:
 
 ```bash
 ./script/developer_id_preflight.sh
 ./script/package_developer_id.sh
 ```
 
-See [Direct Distribution](DIRECT_DISTRIBUTION.md) for one-time notary setup, release packaging, website posting, and customer install instructions.
+See [Direct Distribution](DIRECT_DISTRIBUTION.md) for Xcode Organizer release steps, optional CLI packaging, website posting, and customer install instructions.
 
 Optional auto-update is not implemented yet.

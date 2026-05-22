@@ -18,36 +18,63 @@ Customers do not need Xcode, Swift, or a developer account.
 Direct distribution uses:
 
 - Bundle ID: `com.celltracktech.CTTPulse`
-- Team ID: `62QT5L9L6J`
-- Signing identity: `Developer ID Application: Cellular Tracking Technologies LLC (62QT5L9L6J)`
-- Export options: `Config/DeveloperID/ExportOptions.plist`
-- Notary profile: `cttpulse-notary` in the local Keychain
+- Developer ID signing
+- Apple notarization
+- Hardened runtime
+- App Sandbox
 
 The app remains sandboxed and keeps outbound network access for the CTT API and MapKit.
 
-## Required CTT Developer Account Access
+## Primary Xcode Release Flow
 
-The release Mac must have Xcode signed into an Apple Developer account that can access the CTT organization team:
+Use Xcode Organizer as the primary release path. This is the most reliable path for manual releases because Xcode can handle Apple-managed signing and notarization flows that do not behave the same way through `xcodebuild -exportArchive`.
+
+1. Open `CTT Pulse.xcodeproj`.
+2. Select the `CTT Pulse` scheme.
+3. Choose Product -> Archive.
+4. When the archive appears in Organizer, choose Distribute App.
+5. Choose the direct distribution / Developer ID signed app path.
+6. Let Xcode manage signing.
+7. Wait for Apple notarization approval.
+8. Export the signed/notarized app.
+9. Package the exported `CTT Pulse.app` in a DMG before posting it for customers.
+
+Before release, confirm Organizer signs with the intended developer team:
 
 - Entity name: `Cellular Tracking Technologies LLC`
 - Team ID: `62QT5L9L6J`
-- Required access: Certificates, Identifiers & Profiles access for Developer ID signing
 
-If Apple Developer shows "Access Unavailable" for Certificates, Identifiers & Profiles, the Account Holder or an Admin must grant the release account enough access before packaging can succeed. For the current CTT organization, the Account Holder shown by Apple is Casey Halverson.
+If the release is intentionally signed under a different team during testing, do not publish it as the CTT customer build.
 
-After access is granted, add the work Apple Account in Xcode:
+## Package Xcode Export As A DMG
 
-1. Open Xcode.
-2. Open Xcode -> Settings -> Accounts.
-3. Add or select `david.lapuma@celltracktech.com`.
-4. Confirm the `Cellular Tracking Technologies LLC` team appears.
-5. Let Xcode download or create managed signing assets for the team.
+After Xcode exports a signed/notarized `CTT Pulse.app`, create a simple drag-install DMG:
 
-The packaging script uses Xcode automatic signing and will fail fast if Xcode cannot access Team ID `62QT5L9L6J`.
+```bash
+mkdir -p build/ManualDMG/DMGRoot
+ditto "PATH/TO/XCODE/EXPORT/CTT Pulse.app" "build/ManualDMG/DMGRoot/CTT Pulse.app"
+ln -sf /Applications "build/ManualDMG/DMGRoot/Applications"
+hdiutil create \
+  -volname "CTT Pulse" \
+  -srcfolder "build/ManualDMG/DMGRoot" \
+  -ov \
+  -format UDZO \
+  "build/ManualDMG/CTT Pulse.dmg"
+shasum -a 256 "build/ManualDMG/CTT Pulse.dmg" > "build/ManualDMG/CTT Pulse.dmg.sha256"
+```
 
-## One-Time Notary Setup
+If Xcode exported a notarized app, the app inside the DMG should pass Gatekeeper. Validate on a clean Mac user account before publishing.
 
-The packaging script requires a local `notarytool` Keychain profile. Do not put Apple ID passwords, app-specific passwords, API keys, or `.p8` files in the repository.
+## Optional CLI Packaging
+
+The repo also includes a command-line packaging script for future automation or CI. Treat it as an advanced path. It may require additional Apple Developer role/certificate setup even when the Xcode Organizer flow succeeds.
+
+The script uses:
+
+- Export options: `Config/DeveloperID/ExportOptions.plist`
+- Notary profile: `cttpulse-notary` in the local Keychain
+
+Do not put Apple ID passwords, app-specific passwords, API keys, or `.p8` files in the repository.
 
 Create an Apple app-specific password:
 
@@ -72,9 +99,7 @@ Verify setup:
 ./script/developer_id_preflight.sh
 ```
 
-## Build A Release DMG
-
-Run:
+Build a CLI release DMG:
 
 ```bash
 ./script/package_developer_id.sh
@@ -105,7 +130,7 @@ CTT Pulse-0.1.0+1.dmg
 CTT Pulse-0.1.0+1.dmg.sha256
 ```
 
-## Diagnostic Packaging Only
+### Diagnostic Packaging Only
 
 For local packaging diagnostics, this command produces a signed but unnotarized DMG:
 
@@ -120,9 +145,9 @@ Do not publish that DMG. Gatekeeper will reject it as unnotarized Developer ID s
 Before posting a DMG publicly:
 
 - Run `swift test`.
-- Run `./script/developer_id_preflight.sh`.
-- Run `./script/package_developer_id.sh`.
-- Install the stapled DMG on a clean Mac user account.
+- Create the signed/notarized app through Xcode Organizer, or run the optional CLI package script if that path is configured.
+- Package the exported app as a DMG.
+- Install the DMG on a clean Mac user account.
 - Confirm first-run API setup succeeds.
 - Confirm Keychain token persistence after quit/relaunch.
 - Confirm CTT network calls, MapKit, notifications, and outside-click dismissal work in the sandboxed build.
