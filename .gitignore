@@ -5,6 +5,7 @@
 # SwiftPM and build output
 .build/
 .swiftpm/
+build/
 dist/
 DerivedData/
 
