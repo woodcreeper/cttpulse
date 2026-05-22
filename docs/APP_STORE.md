@@ -2,6 +2,8 @@
 
 This document tracks what CTT Pulse needs before it can ship through the Mac App Store.
 
+For the faster hosted-DMG customer beta path, see [Direct Distribution](DIRECT_DISTRIBUTION.md).
+
 Official Apple references:
 
 - [Distributing your app for beta testing and releases](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases)

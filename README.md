@@ -106,6 +106,7 @@ The app is intentionally dependency-light and currently uses only Apple framewor
 - [Installation](docs/INSTALLATION.md)
 - [Settings](docs/SETTINGS.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Direct Distribution](docs/DIRECT_DISTRIBUTION.md)
 - [App Store Distribution](docs/APP_STORE.md)
 - [Security](SECURITY.md)
 
@@ -210,9 +211,9 @@ Tests/CTTPulseCoreTests/
 
 ## Packaging Status
 
-The project builds from SwiftPM for local development and from `CTT Pulse.xcodeproj` for Mac App Store archive/upload workflows. Local build products in `.build/`, `build/`, and `dist/` are intentionally ignored by git.
+The project builds from SwiftPM for local development and from `CTT Pulse.xcodeproj` for Developer ID and Mac App Store archive workflows. Local build products in `.build/`, `build/`, and `dist/` are intentionally ignored by git.
 
-For App Store status, required metadata, and archive commands, see [App Store Distribution](docs/APP_STORE.md).
+For customer beta releases hosted by CTT, see [Direct Distribution](docs/DIRECT_DISTRIBUTION.md). For App Store status, required metadata, and archive commands, see [App Store Distribution](docs/APP_STORE.md).
 
 ## Roadmap
 

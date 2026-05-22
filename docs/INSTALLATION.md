@@ -1,6 +1,6 @@
 # Installation
 
-CTT Pulse currently supports source-based installation for macOS 26+ users with Apple's developer tools installed. Packaged, signed, notarized releases are planned but not yet available.
+CTT Pulse supports source-based installation for developers and Developer ID signed/notarized DMG releases for non-developer customers.
 
 ## Requirements
 
@@ -72,13 +72,15 @@ To remove the stored CTT token, use Settings -> Disconnect before deleting the a
 
 ## Distribution Status
 
-This repository is ready for local source builds. It is not yet ready as a double-click installer for non-developer users.
+This repository has a repeatable Developer ID packaging workflow for double-click customer installs.
 
-Before publishing packaged releases, the app still needs:
+Distribution maintainers should use:
 
-- Developer ID signing,
-- hardened runtime,
-- notarization,
-- release bundle generation,
-- DMG or installer packaging,
-- optional auto-update.
+```bash
+./script/developer_id_preflight.sh
+./script/package_developer_id.sh
+```
+
+See [Direct Distribution](DIRECT_DISTRIBUTION.md) for one-time notary setup, release packaging, website posting, and customer install instructions.
+
+Optional auto-update is not implemented yet.
