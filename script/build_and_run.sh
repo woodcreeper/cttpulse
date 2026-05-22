@@ -11,7 +11,7 @@ MIN_SYSTEM_VERSION="26.0"
 APP_VERSION="${CTTPULSE_VERSION:-0.1.0}"
 APP_BUILD="${CTTPULSE_BUILD:-1}"
 APP_CATEGORY="public.app-category.productivity"
-APP_COPYRIGHT="${CTTPULSE_COPYRIGHT:-Copyright © 2026 CTT Pulse contributors.}"
+APP_COPYRIGHT="${CTTPULSE_COPYRIGHT:-Developed by David LaPuma. Copyright © 2026 Cellular Tracking Technologies, LLC.}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
