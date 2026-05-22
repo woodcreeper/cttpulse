@@ -142,7 +142,68 @@ struct TelemetryStoreTests {
 
         #expect(store.lastError == nil)
         #expect(store.locations(for: store.checkIns[0]).isEmpty)
-        #expect(store.locationError(for: store.checkIns[0]) == "CTT did not return a location stream for this device.")
+        #expect(store.locationError(for: store.checkIns[0]) == "CTT did not return a location stream or latest location snapshot for this device.")
+    }
+
+    @Test("Device location not found falls back to latest device snapshot")
+    func locationNotFoundFallsBackToLatestDeviceSnapshot() async {
+        let suiteName = "TelemetryStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let api = FakeAPI()
+        api.locationError = CTTAPIClientError.server(
+            status: 404,
+            code: .notFound,
+            message: "Device not found",
+            requestID: "request_snapshot"
+        )
+        api.deviceDetail = DeviceDetailDTO(
+            imei: "352753094012345",
+            deviceType: "flicker",
+            deviceName: nil,
+            latestLocation: DeviceLatestLocationDTO(
+                timeUtc: "2026-05-20T12:00:00Z",
+                type: "cell_locate",
+                lat: 50.0134843,
+                lon: -97.7692219,
+                altM: 294
+            ),
+            latestSensor: DeviceLatestSensorDTO(
+                timeUtc: "2026-05-20T12:00:00Z",
+                batteryMv: 4080
+            )
+        )
+        let tokenStore = KeychainTokenStore(service: "TelemetryStoreTests.\(UUID().uuidString)")
+        let store = TelemetryStore(
+            apiClient: api,
+            tokenStore: tokenStore,
+            lastSeenStore: LastSeenConnectionStore(defaults: defaults),
+            filterStore: TelemetryFilterStore(defaults: defaults),
+            nowProvider: { Self.testNow },
+            initiallyConfigured: true
+        )
+
+        api.devices = [
+            ProjectDeviceDTO(
+                imei: "352753094012345",
+                deviceType: "flicker",
+                alias: "Cason 40",
+                latestConnectionAt: "2026-05-20T12:00:00Z",
+                latestLocationAt: nil,
+                latestBatteryV: nil
+            )
+        ]
+
+        await store.refresh(reason: .launch)
+        await store.loadLocations(for: store.checkIns[0])
+
+        let locations = store.locations(for: store.checkIns[0])
+        #expect(locations.count == 1)
+        #expect(locations[0].type == "cell_locate")
+        #expect(locations[0].coordinateLabel == "50.013484, -97.769222")
+        #expect(store.locationError(for: store.checkIns[0]) == nil)
+        #expect(store.batteryVoltage(for: store.checkIns[0]) == 4.08)
     }
 
     @Test("Rate limited location errors use friendly detail copy")
@@ -505,6 +566,7 @@ struct TelemetryStoreTests {
 
 private final class FakeAPI: CTTAPIProviding, @unchecked Sendable {
     var devices: [ProjectDeviceDTO] = []
+    var deviceDetail: DeviceDetailDTO?
     var locationError: Error?
     var locationResponses: [[LocationRecordDTO]] = []
     var locationRequests: [(imei: String, start: Date, end: Date)] = []
@@ -538,6 +600,19 @@ private final class FakeAPI: CTTAPIProviding, @unchecked Sendable {
 
     func fetchDevices(projectID: String) async throws -> [ProjectDeviceDTO] {
         devices
+    }
+
+    func fetchDevice(imei: String) async throws -> DeviceDetailDTO {
+        if let deviceDetail {
+            return deviceDetail
+        }
+
+        throw CTTAPIClientError.server(
+            status: 404,
+            code: .notFound,
+            message: "Device not found",
+            requestID: "fake_device_detail"
+        )
     }
 
     func fetchLocations(imei: String, start: Date, end: Date) async throws -> [LocationRecordDTO] {

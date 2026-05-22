@@ -43,6 +43,7 @@ protocol CTTAPIProviding: Sendable {
     func fetchMe() async throws -> UserDTO
     func fetchProjects() async throws -> [ProjectDTO]
     func fetchDevices(projectID: String) async throws -> [ProjectDeviceDTO]
+    func fetchDevice(imei: String) async throws -> DeviceDetailDTO
     func fetchLocations(imei: String, start: Date, end: Date) async throws -> [LocationRecordDTO]
     func fetchSensors(imei: String, start: Date, end: Date) async throws -> [SensorRecordDTO]
 }
@@ -74,6 +75,11 @@ public final class CTTAPIClient: CTTAPIProviding, @unchecked Sendable {
 
     func fetchDevices(projectID: String) async throws -> [ProjectDeviceDTO] {
         try await fetchPaginated(path: "/v1/projects/\(projectID)/devices")
+    }
+
+    func fetchDevice(imei: String) async throws -> DeviceDetailDTO {
+        let envelope: DataEnvelope<DeviceDetailDTO> = try await send(path: "/v1/devices/\(imei)")
+        return envelope.data
     }
 
     func fetchLocations(imei: String, start: Date, end: Date) async throws -> [LocationRecordDTO] {

@@ -403,15 +403,17 @@ public final class TelemetryStore: ObservableObject {
         } catch is CancellationError {
             return
         } catch {
-            locationFetchAtByIMEI[checkIn.imei] = nowProvider()
-            locationsByIMEI[checkIn.imei] = []
-            locationSourcesByIMEI[checkIn.imei] = .recent24h
-
             if case CTTAPIClientError.server(_, .notFound, _, _) = error {
-                locationErrorsByIMEI[checkIn.imei] = "CTT did not return a location stream for this device."
+                await loadDeviceSnapshotFallback(for: checkIn)
             } else if case CTTAPIClientError.server(_, .rateLimited, _, _) = error {
+                locationFetchAtByIMEI[checkIn.imei] = nowProvider()
+                locationsByIMEI[checkIn.imei] = []
+                locationSourcesByIMEI[checkIn.imei] = .recent24h
                 locationErrorsByIMEI[checkIn.imei] = "CTT rate limit reached. Waiting briefly before trying again."
             } else {
+                locationFetchAtByIMEI[checkIn.imei] = nowProvider()
+                locationsByIMEI[checkIn.imei] = []
+                locationSourcesByIMEI[checkIn.imei] = .recent24h
                 locationErrorsByIMEI[checkIn.imei] = error.localizedDescription
             }
         }
@@ -463,6 +465,73 @@ public final class TelemetryStore: ObservableObject {
         }
 
         return checkIn.connectionAt < recentStart ? checkIn.connectionAt : nil
+    }
+
+    private func loadDeviceSnapshotFallback(for checkIn: TelemetryCheckIn) async {
+        locationFetchAtByIMEI[checkIn.imei] = nowProvider()
+
+        do {
+            let detail = try await apiClient.fetchDevice(imei: checkIn.imei)
+            let snapshotLocation = snapshotLocation(from: detail, checkIn: checkIn)
+            let snapshotBattery = snapshotBatteryReading(from: detail)
+
+            if let snapshotBattery {
+                batteryReadingsByIMEI[checkIn.imei] = snapshotBattery
+            }
+
+            if let snapshotLocation {
+                locationsByIMEI[checkIn.imei] = [snapshotLocation]
+                locationSourcesByIMEI[checkIn.imei] = .lastKnown(referenceAt: snapshotLocation.fixAt)
+                locationErrorsByIMEI[checkIn.imei] = nil
+            } else {
+                locationsByIMEI[checkIn.imei] = []
+                locationSourcesByIMEI[checkIn.imei] = .recent24h
+                locationErrorsByIMEI[checkIn.imei] = "CTT returned a latest location snapshot without coordinates."
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            locationsByIMEI[checkIn.imei] = []
+            locationSourcesByIMEI[checkIn.imei] = .recent24h
+            locationErrorsByIMEI[checkIn.imei] = "CTT did not return a location stream or latest location snapshot for this device."
+        }
+    }
+
+    private func snapshotLocation(from detail: DeviceDetailDTO, checkIn: TelemetryCheckIn) -> TelemetryLocation? {
+        guard
+            let latestLocation = detail.latestLocation,
+            let fixDate = latestLocation.fixDate,
+            let latitude = latestLocation.lat,
+            let longitude = latestLocation.lon,
+            (-90...90).contains(latitude),
+            (-180...180).contains(longitude)
+        else {
+            return nil
+        }
+
+        return TelemetryLocation(
+            id: "\(checkIn.imei)-snapshot-\(TelemetryDateFormatter.apiString(from: fixDate))-\(latitude)-\(longitude)",
+            imei: checkIn.imei,
+            fixAt: fixDate,
+            type: latestLocation.type,
+            latitude: latitude,
+            longitude: longitude,
+            altitudeM: latestLocation.altM,
+            groundSpeedKnts: latestLocation.groundSpeedKnts,
+            uncertaintyM: latestLocation.uncertaintyM
+        )
+    }
+
+    private func snapshotBatteryReading(from detail: DeviceDetailDTO) -> TelemetryBatteryReading? {
+        guard
+            let latestSensor = detail.latestSensor,
+            let voltage = latestSensor.voltage,
+            let readAt = latestSensor.readDate
+        else {
+            return nil
+        }
+
+        return TelemetryBatteryReading(voltage: voltage, readAt: readAt)
     }
 
     private func loadBatteryIfNeeded(for checkIn: TelemetryCheckIn, force: Bool) async {
