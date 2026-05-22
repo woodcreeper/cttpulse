@@ -77,7 +77,7 @@ No valid notarytool Keychain profile named "$NOTARY_PROFILE".
 Create it once with:
   xcrun notarytool store-credentials "$NOTARY_PROFILE" \\
     --apple-id "YOUR_APPLE_ID_EMAIL" \\
-    --team-id "33XYKMGGZ7"
+    --team-id "62QT5L9L6J"
 
 The command prompts securely for an app-specific password.
 EOF
@@ -119,13 +119,13 @@ fi
 SIGNING_OUTPUT="$(codesign -dvvv --entitlements :- "$APP_PATH" 2>&1 || true)"
 printf '%s\n' "$SIGNING_OUTPUT" > "$BUILD_ROOT/codesign.txt"
 
-if ! grep -q "Authority=Developer ID Application: David La Puma (33XYKMGGZ7)" <<<"$SIGNING_OUTPUT"; then
+if ! grep -Eq "Authority=Developer ID Application: .+ \\(62QT5L9L6J\\)" <<<"$SIGNING_OUTPUT"; then
   printf 'Exported app is not signed with the expected Developer ID Application identity.\n' >&2
   printf '%s\n' "$SIGNING_OUTPUT" >&2
   exit 1
 fi
 
-if ! grep -q "TeamIdentifier=33XYKMGGZ7" <<<"$SIGNING_OUTPUT"; then
+if ! grep -q "TeamIdentifier=62QT5L9L6J" <<<"$SIGNING_OUTPUT"; then
   printf 'Exported app is missing the expected TeamIdentifier.\n' >&2
   printf '%s\n' "$SIGNING_OUTPUT" >&2
   exit 1

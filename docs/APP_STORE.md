@@ -99,7 +99,7 @@ CTT Pulse.xcodeproj
     Sources: Sources/CTTPulseApp + Sources/CTTPulseCore
     Resources: Resources/Assets.xcassets + Resources/PrivacyInfo.xcprivacy
     Entitlements: Config/AppStore/CTTPulse.entitlements
-    Signing: automatic, Apple Developer team 33XYKMGGZ7
+    Signing: automatic, Apple Developer team 62QT5L9L6J
 ```
 
 Keep the SwiftPM package as the source of truth for tests and fast local development. The Xcode project is the release wrapper around the same source files.

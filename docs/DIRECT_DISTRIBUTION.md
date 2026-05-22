@@ -18,12 +18,32 @@ Customers do not need Xcode, Swift, or a developer account.
 Direct distribution uses:
 
 - Bundle ID: `com.celltracktech.CTTPulse`
-- Team ID: `33XYKMGGZ7`
-- Signing identity: `Developer ID Application: David La Puma (33XYKMGGZ7)`
+- Team ID: `62QT5L9L6J`
+- Signing identity: `Developer ID Application: Cellular Tracking Technologies LLC (62QT5L9L6J)`
 - Export options: `Config/DeveloperID/ExportOptions.plist`
 - Notary profile: `cttpulse-notary` in the local Keychain
 
 The app remains sandboxed and keeps outbound network access for the CTT API and MapKit.
+
+## Required CTT Developer Account Access
+
+The release Mac must have Xcode signed into an Apple Developer account that can access the CTT organization team:
+
+- Entity name: `Cellular Tracking Technologies LLC`
+- Team ID: `62QT5L9L6J`
+- Required access: Certificates, Identifiers & Profiles access for Developer ID signing
+
+If Apple Developer shows "Access Unavailable" for Certificates, Identifiers & Profiles, the Account Holder or an Admin must grant the release account enough access before packaging can succeed. For the current CTT organization, the Account Holder shown by Apple is Casey Halverson.
+
+After access is granted, add the work Apple Account in Xcode:
+
+1. Open Xcode.
+2. Open Xcode -> Settings -> Accounts.
+3. Add or select `david.lapuma@celltracktech.com`.
+4. Confirm the `Cellular Tracking Technologies LLC` team appears.
+5. Let Xcode download or create managed signing assets for the team.
+
+The packaging script uses Xcode automatic signing and will fail fast if Xcode cannot access Team ID `62QT5L9L6J`.
 
 ## One-Time Notary Setup
 
@@ -41,7 +61,7 @@ Then run this in Terminal, not in chat:
 ```bash
 xcrun notarytool store-credentials "cttpulse-notary" \
   --apple-id "YOUR_APPLE_ID_EMAIL" \
-  --team-id "33XYKMGGZ7"
+  --team-id "62QT5L9L6J"
 ```
 
 `notarytool` prompts securely for the app-specific password and validates the credentials before saving them to Keychain.

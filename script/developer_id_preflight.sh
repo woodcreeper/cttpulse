@@ -45,7 +45,7 @@ if [[ -e "$EXPORT_OPTIONS" ]]; then
   signing_style="$(/usr/libexec/PlistBuddy -c 'Print :signingStyle' "$EXPORT_OPTIONS" 2>/dev/null || true)"
 
   [[ "$method" == "developer-id" ]] || fail "Developer ID export method must be developer-id."
-  [[ "$team_id" == "33XYKMGGZ7" ]] || fail "Developer ID export teamID must be 33XYKMGGZ7."
+  [[ "$team_id" == "62QT5L9L6J" ]] || fail "Developer ID export teamID must be 62QT5L9L6J."
   [[ "$signing_style" == "automatic" ]] || warn "Developer ID export signingStyle is not automatic."
 fi
 
