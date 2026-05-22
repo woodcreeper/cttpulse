@@ -1,6 +1,6 @@
 # CTT Pulse
 
-A native macOS 26 SwiftUI app that creates a Perch-inspired, top-center notch companion for CTT wildlife telemetry check-ins.
+A native macOS 26 SwiftUI app that creates a compact top-center companion for CTT wildlife telemetry check-ins.
 
 CTT Pulse is a macOS menu bar and notch-area companion. Its compact panel is a custom AppKit-backed floating window positioned near the top-center menu bar area and rendered with SwiftUI liquid-glass-style surfaces.
 
