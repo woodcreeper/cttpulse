@@ -1,6 +1,7 @@
 #!/usr/bin/env swift
 
 import AppKit
+import CoreGraphics
 import Foundation
 
 struct IconSlot {
@@ -28,7 +29,9 @@ let slots = [
 
 let fileManager = FileManager.default
 let root = URL(fileURLWithPath: fileManager.currentDirectoryPath)
+let design = root.appendingPathComponent("Design", isDirectory: true)
 let resources = root.appendingPathComponent("Resources", isDirectory: true)
+let sourceIcon = design.appendingPathComponent("AppIconSource.png")
 let assets = resources.appendingPathComponent("Assets.xcassets", isDirectory: true)
 let appIconSet = assets.appendingPathComponent("AppIcon.appiconset", isDirectory: true)
 let accentColorSet = assets.appendingPathComponent("AccentColor.colorset", isDirectory: true)
@@ -41,185 +44,88 @@ func writeJSON(_ object: Any, to url: URL) throws {
     try data.write(to: url)
 }
 
-func c(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat, _ alpha: CGFloat = 1) -> NSColor {
-    NSColor(calibratedRed: red, green: green, blue: blue, alpha: alpha)
+func loadSourceImage() throws -> CGImage {
+    guard let image = NSImage(contentsOf: sourceIcon) else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Missing source icon: \(sourceIcon.path)"]
+        )
+    }
+
+    guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Could not read source icon as a CGImage."]
+        )
+    }
+
+    let side = min(cgImage.width, cgImage.height)
+    let crop = CGRect(
+        x: (cgImage.width - side) / 2,
+        y: (cgImage.height - side) / 2,
+        width: side,
+        height: side
+    )
+
+    guard let cropped = cgImage.cropping(to: crop) else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: "Could not crop source icon to a square."]
+        )
+    }
+
+    return cropped
 }
 
-func drawArc(in context: CGContext, center: CGPoint, radius: CGFloat, start: CGFloat, end: CGFloat, width: CGFloat, color: NSColor) {
-    context.saveGState()
-    context.setLineCap(.round)
-    context.setLineWidth(width)
-    context.setStrokeColor(color.cgColor)
-    context.addArc(center: center, radius: radius, startAngle: start, endAngle: end, clockwise: false)
-    context.strokePath()
-    context.restoreGState()
-}
+func resizedPNG(from source: CGImage, pixels: Int) throws -> Data {
+    guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 4,
+            userInfo: [NSLocalizedDescriptionKey: "Could not create sRGB color space."]
+        )
+    }
 
-func drawIcon(pixels: Int) throws -> NSBitmapImageRep {
-    guard let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .deviceRGB,
-        bitmapFormat: [],
+    guard let context = CGContext(
+        data: nil,
+        width: pixels,
+        height: pixels,
+        bitsPerComponent: 8,
         bytesPerRow: 0,
-        bitsPerPixel: 0
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
     ) else {
-        throw NSError(domain: "CTTPulseIcon", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not create bitmap rep."])
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 5,
+            userInfo: [NSLocalizedDescriptionKey: "Could not create \(pixels)x\(pixels) icon context."]
+        )
     }
 
-    rep.size = NSSize(width: pixels, height: pixels)
+    context.interpolationQuality = .high
+    context.draw(source, in: CGRect(x: 0, y: 0, width: pixels, height: pixels))
 
-    guard let graphics = NSGraphicsContext(bitmapImageRep: rep) else {
-        throw NSError(domain: "CTTPulseIcon", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not create graphics context."])
+    guard let output = context.makeImage() else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 6,
+            userInfo: [NSLocalizedDescriptionKey: "Could not render \(pixels)x\(pixels) icon."]
+        )
     }
 
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = graphics
-
-    let context = graphics.cgContext
-    context.setAllowsAntialiasing(true)
-    context.setShouldAntialias(true)
-    context.clear(CGRect(x: 0, y: 0, width: pixels, height: pixels))
-
-    let s = CGFloat(pixels) / 1024.0
-    func v(_ value: CGFloat) -> CGFloat { value * s }
-
-    let baseRect = NSRect(x: v(72), y: v(70), width: v(880), height: v(884))
-    let baseRadius = v(218)
-    let basePath = NSBezierPath(roundedRect: baseRect, xRadius: baseRadius, yRadius: baseRadius)
-
-    let shadow = NSShadow()
-    shadow.shadowColor = NSColor.black.withAlphaComponent(0.48)
-    shadow.shadowOffset = NSSize(width: 0, height: -v(22))
-    shadow.shadowBlurRadius = v(56)
-    shadow.set()
-    c(0.01, 0.015, 0.018, 0.88).setFill()
-    basePath.fill()
-
-    context.setShadow(offset: .zero, blur: 0)
-    context.saveGState()
-    basePath.addClip()
-
-    let baseGradient = NSGradient(colorsAndLocations:
-        (c(0.012, 0.028, 0.035), 0.0),
-        (c(0.026, 0.105, 0.105), 0.48),
-        (c(0.005, 0.018, 0.026), 1.0)
-    )
-    baseGradient?.draw(in: basePath, angle: -36)
-
-    let upperGlow = NSBezierPath(ovalIn: NSRect(x: v(-80), y: v(612), width: v(1184), height: v(520)))
-    NSGradient(colorsAndLocations:
-        (c(1.0, 1.0, 0.82, 0.34), 0.0),
-        (c(0.65, 1.0, 0.95, 0.14), 0.46),
-        (c(1.0, 1.0, 1.0, 0.0), 1.0)
-    )?.draw(in: upperGlow, angle: -88)
-
-    let lowerCoolGlow = NSBezierPath(ovalIn: NSRect(x: v(90), y: v(72), width: v(840), height: v(460)))
-    NSGradient(colorsAndLocations:
-        (c(0.0, 0.78, 0.88, 0.21), 0.0),
-        (c(0.0, 0.22, 0.28, 0.03), 1.0)
-    )?.draw(in: lowerCoolGlow, angle: 90)
-
-    let notchRect = NSRect(x: v(300), y: v(792), width: v(424), height: v(104))
-    let notchPath = NSBezierPath(roundedRect: notchRect, xRadius: v(52), yRadius: v(52))
-    NSGradient(colorsAndLocations:
-        (c(0.0, 0.0, 0.0, 0.98), 0.0),
-        (c(0.035, 0.045, 0.05, 0.95), 0.58),
-        (c(0.0, 0.0, 0.0, 0.99), 1.0)
-    )?.draw(in: notchPath, angle: -90)
-    notchPath.lineWidth = v(3)
-    c(0.78, 1.0, 0.96, 0.2).setStroke()
-    notchPath.stroke()
-
-    let pulse = NSBezierPath()
-    pulse.move(to: NSPoint(x: v(236), y: v(426)))
-    pulse.curve(
-        to: NSPoint(x: v(366), y: v(426)),
-        controlPoint1: NSPoint(x: v(284), y: v(492)),
-        controlPoint2: NSPoint(x: v(312), y: v(362))
-    )
-    pulse.curve(
-        to: NSPoint(x: v(474), y: v(426)),
-        controlPoint1: NSPoint(x: v(408), y: v(476)),
-        controlPoint2: NSPoint(x: v(426), y: v(386))
-    )
-    pulse.curve(
-        to: NSPoint(x: v(656), y: v(426)),
-        controlPoint1: NSPoint(x: v(532), y: v(492)),
-        controlPoint2: NSPoint(x: v(586), y: v(362))
-    )
-    pulse.curve(
-        to: NSPoint(x: v(788), y: v(426)),
-        controlPoint1: NSPoint(x: v(708), y: v(480)),
-        controlPoint2: NSPoint(x: v(740), y: v(380))
-    )
-    pulse.lineWidth = v(17)
-    c(0.15, 0.92, 0.84, 0.33).setStroke()
-    pulse.stroke()
-
-    let center = CGPoint(x: v(512), y: v(518))
-    for index in 0..<3 {
-        let radius = v(CGFloat(120 + index * 86))
-        let width = v(CGFloat(28 - index * 4))
-        let alpha = CGFloat(0.74 - Double(index) * 0.16)
-        drawArc(in: context, center: center, radius: radius, start: -0.62, end: 0.62, width: width, color: c(0.78, 1.0, 0.96, alpha))
-        drawArc(in: context, center: center, radius: radius, start: .pi - 0.62, end: .pi + 0.62, width: width, color: c(0.78, 1.0, 0.96, alpha))
+    let bitmap = NSBitmapImageRep(cgImage: output)
+    guard let data = bitmap.representation(using: .png, properties: [:]) else {
+        throw NSError(
+            domain: "CTTPulseIcon",
+            code: 7,
+            userInfo: [NSLocalizedDescriptionKey: "Could not encode \(pixels)x\(pixels) icon as PNG."]
+        )
     }
 
-    let dotShadow = NSShadow()
-    dotShadow.shadowColor = c(0.0, 0.88, 0.76, 0.65)
-    dotShadow.shadowBlurRadius = v(38)
-    dotShadow.shadowOffset = .zero
-    dotShadow.set()
-
-    let outerDot = NSBezierPath(ovalIn: NSRect(x: v(425), y: v(431), width: v(174), height: v(174)))
-    c(0.68, 1.0, 0.9, 0.88).setFill()
-    outerDot.fill()
-
-    context.setShadow(offset: .zero, blur: 0)
-    let dot = NSBezierPath(ovalIn: NSRect(x: v(452), y: v(458), width: v(120), height: v(120)))
-    NSGradient(colorsAndLocations:
-        (c(0.0, 0.92, 0.62), 0.0),
-        (c(0.0, 0.58, 0.77), 1.0)
-    )?.draw(in: dot, angle: -35)
-
-    let dotHighlight = NSBezierPath(ovalIn: NSRect(x: v(474), y: v(524), width: v(46), height: v(32)))
-    c(1.0, 1.0, 1.0, 0.42).setFill()
-    dotHighlight.fill()
-
-    let smallFix = NSBezierPath(ovalIn: NSRect(x: v(658), y: v(270), width: v(42), height: v(42)))
-    c(0.86, 1.0, 0.42, 0.78).setFill()
-    smallFix.fill()
-    let route = NSBezierPath()
-    route.move(to: NSPoint(x: v(512), y: v(458)))
-    route.curve(
-        to: NSPoint(x: v(679), y: v(292)),
-        controlPoint1: NSPoint(x: v(560), y: v(392)),
-        controlPoint2: NSPoint(x: v(610), y: v(312))
-    )
-    route.lineWidth = v(10)
-    c(0.88, 1.0, 0.96, 0.46).setStroke()
-    route.stroke()
-
-    context.restoreGState()
-
-    let innerStroke = NSBezierPath(roundedRect: baseRect.insetBy(dx: v(18), dy: v(18)), xRadius: v(200), yRadius: v(200))
-    innerStroke.lineWidth = v(3)
-    c(1.0, 1.0, 1.0, 0.22).setStroke()
-    innerStroke.stroke()
-
-    basePath.lineWidth = v(6)
-    c(0.72, 1.0, 0.94, 0.26).setStroke()
-    basePath.stroke()
-
-    graphics.flushGraphics()
-    NSGraphicsContext.restoreGraphicsState()
-    return rep
+    return data
 }
 
 try fileManager.createDirectory(at: resources, withIntermediateDirectories: true)
@@ -247,8 +153,8 @@ try writeJSON([
             "color-space": "srgb",
             "components": [
                 "red": "0.000",
-                "green": "0.720",
-                "blue": "0.680",
+                "green": "0.560",
+                "blue": "0.690",
                 "alpha": "1.000"
             ]
         ]
@@ -276,16 +182,12 @@ try writeJSON([
     ]
 ], to: appIconSet.appendingPathComponent("Contents.json"))
 
-for slot in slots {
-    let rep = try drawIcon(pixels: slot.pixels)
-    guard let pngData = rep.representation(using: .png, properties: [:]) else {
-        throw NSError(domain: "CTTPulseIcon", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not encode \(slot.filename)."])
-    }
+let source = try loadSourceImage()
 
-    let appIconURL = appIconSet.appendingPathComponent(slot.filename)
-    let icnsURL = icnsIconSet.appendingPathComponent(slot.filename)
-    try pngData.write(to: appIconURL)
-    try pngData.write(to: icnsURL)
+for slot in slots {
+    let pngData = try resizedPNG(from: source, pixels: slot.pixels)
+    try pngData.write(to: appIconSet.appendingPathComponent(slot.filename))
+    try pngData.write(to: icnsIconSet.appendingPathComponent(slot.filename))
 }
 
 let process = Process()
@@ -295,7 +197,11 @@ try process.run()
 process.waitUntilExit()
 
 if process.terminationStatus != 0 {
-    throw NSError(domain: "CTTPulseIcon", code: Int(process.terminationStatus), userInfo: [NSLocalizedDescriptionKey: "iconutil failed."])
+    throw NSError(
+        domain: "CTTPulseIcon",
+        code: Int(process.terminationStatus),
+        userInfo: [NSLocalizedDescriptionKey: "iconutil failed."]
+    )
 }
 
 print("Generated \(appIconSet.path)")
