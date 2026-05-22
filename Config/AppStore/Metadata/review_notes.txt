@@ -1,0 +1,10 @@
+CTT Pulse requires CTT Data Portal API access to show live telemetry data. For App Review, use a dedicated demo account or demo API access provided only through App Store Connect review credential fields.
+
+The app remains usable on Macs with or without a camera notch. Users can access all core workflows from the menu bar item, settings window, and main detail window.
+
+Sandbox validation focus areas:
+- Keychain storage for API access.
+- Outbound network access to the CTT customer API.
+- MapKit rendering for location points.
+- Optional macOS Notification Center delivery.
+- Outside-click dismissal of the top-center companion panel.

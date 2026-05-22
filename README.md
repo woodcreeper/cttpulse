@@ -2,12 +2,12 @@
 
 A native macOS 26 SwiftUI app that creates a Perch-inspired, top-center notch companion for CTT wildlife telemetry check-ins.
 
-This is a macOS app, not an iOS Dynamic Island or ActivityKit app. The island is a custom AppKit-backed floating panel positioned near the screen notch/menu bar and rendered with SwiftUI liquid-glass-style surfaces.
+CTT Pulse is a macOS menu bar and notch-area companion. Its compact panel is a custom AppKit-backed floating window positioned near the top-center menu bar area and rendered with SwiftUI liquid-glass-style surfaces.
 
 ## What It Does
 
 - Polls the CTT customer API for wildlife telemetry device check-ins.
-- Shows a compact notch-adjacent island that stays out of the way until hovered, clicked, or triggered by fresh check-ins.
+- Shows a compact top-center island that stays out of the way until hovered, clicked, or triggered by fresh check-ins.
 - Opens into a small translucent telemetry pane with the latest selected check-in, a scrollable recent list, and a mini map.
 - Provides a main detail window with a recent check-in sidebar, selected device metadata, and a larger MapKit map.
 - Lets the user choose which CTT projects/devices are included in the app and alerts.
@@ -20,7 +20,7 @@ This is a macOS app, not an iOS Dynamic Island or ActivityKit app. The island is
 ### Island Behavior
 
 - Hidden/idle by default so it does not block menu bar or browser UI.
-- Top-center hover hotspot gives a subtle glass shimmer near the notch.
+- Top-center hover hotspot gives a subtle glass shimmer near the menu bar/notch area.
 - Click opens the island pane.
 - Click outside or use the close control to hide the expanded pane.
 - Recent list is clickable and scrollable.
@@ -29,7 +29,7 @@ This is a macOS app, not an iOS Dynamic Island or ActivityKit app. The island is
 
 ### Notifications
 
-- In-app alerts appear as a compact island pulse near the notch.
+- In-app alerts appear as a compact island pulse near the menu bar/notch area.
 - By default, in-app alerts auto-hide after 12 seconds.
 - A setting can keep in-app alerts visible until the island is closed.
 - Optional macOS notifications use Notification Center banners outside the app.
@@ -73,6 +73,12 @@ Authorization: Bearer <token>
 - If the latest connection only has a cell-locate fix, that fix is shown as the primary point.
 - Clicking a map point opens a popover with fix type, fix time, latitude, and longitude.
 - The larger detail map includes an external Apple Maps link for the latest displayed point.
+
+### Notch And Non-Notch Macs
+
+- On Macs with a camera notch, the compact panel anchors to the notch/top-center geometry exposed by macOS.
+- On Macs without a notch, the same panel anchors to the top center of the visible menu bar area.
+- The menu bar item, settings window, and main detail window remain fully usable without hovering the top-center panel.
 
 ### Battery
 
@@ -165,7 +171,7 @@ Sources/CTTPulseApp/
 
 Sources/CTTPulseCore/App/
   AppCoordinator.swift           Owns app-wide stores, windows, island controller
-  IslandPanelController.swift    AppKit floating panel for the notch island
+  IslandPanelController.swift    AppKit floating panel for the top-center island
   NotchHoverMonitor.swift        Pointer hotspot monitoring
   MainWindowController.swift     Main detail window bridge
   SettingsWindowController.swift Settings window bridge
@@ -182,7 +188,7 @@ Sources/CTTPulseCore/Stores/
   NotificationPreferencesStore.swift Persisted alert display and event preferences
 
 Sources/CTTPulseCore/Views/
-  CTTPulseView.swift      Compact/expanded notch island UI
+  CTTPulseView.swift      Compact/expanded top-center island UI
   ContentView.swift              Main split/detail window
   DetailView.swift               Device detail and large map
   TelemetryMapView.swift         MapKit annotations and point popovers
@@ -204,18 +210,9 @@ Tests/CTTPulseCoreTests/
 
 ## Packaging Status
 
-The project currently builds and runs locally from SwiftPM. The script stages a development `.app` bundle in `dist/`, which is intentionally ignored by git.
+The project builds from SwiftPM for local development and from `CTT Pulse.xcodeproj` for Mac App Store archive/upload workflows. Local build products in `.build/`, `build/`, and `dist/` are intentionally ignored by git.
 
-Not yet completed:
-
-- Developer ID signing.
-- Hardened runtime configuration.
-- Notarization.
-- Installer or DMG packaging.
-- Mac App Store Xcode archive/sign/upload workflow.
-- Auto-update mechanism.
-
-Those are the next steps before distributing this to other Mac users.
+For App Store status, required metadata, and archive commands, see [App Store Distribution](docs/APP_STORE.md).
 
 ## Roadmap
 

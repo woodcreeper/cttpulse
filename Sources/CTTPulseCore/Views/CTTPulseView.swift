@@ -195,7 +195,7 @@ public struct CTTPulseView: View {
 
                         Text(store.isConfigured ? "No check-ins yet" : "Connect CTT")
                             .font(.headline)
-                        Text(store.isConfigured ? "Waiting for API data" : "Add a PAT in settings")
+                        Text(store.isConfigured ? "Waiting for API data" : "Add API access in settings")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -381,7 +381,7 @@ public struct CTTPulseView: View {
 
     private var headerSubtitle: String {
         if store.checkIns.isEmpty {
-            return store.isConfigured ? "Waiting for CTT data" : "PAT required"
+            return store.isConfigured ? "Waiting for CTT data" : "API access required"
         }
 
         return "\(store.checkIns.count) monitored devices"

@@ -174,7 +174,7 @@ public struct SettingsView: View {
                 .toggleStyle(.checkbox)
             }
 
-            Text("Current in-app alert: a compact island pulse near the notch showing the selected/latest tag. External alerts use standard macOS notification banners with the tag name, project, and check-in context.")
+            Text("Current in-app alert: a compact top-center pulse showing the selected/latest tag. External alerts use standard macOS notification banners with the tag name, project, and check-in context.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -203,7 +203,7 @@ public struct SettingsView: View {
             Text("Personal Access Token")
                 .font(.headline)
 
-            SecureField("ctt_pat...", text: $token)
+            SecureField("API token", text: $token)
                 .textFieldStyle(.roundedBorder)
 
             HStack(spacing: 10) {

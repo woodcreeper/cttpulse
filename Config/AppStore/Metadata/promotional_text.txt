@@ -1,0 +1,1 @@
+Monitor selected CTT wildlife telemetry devices from a compact macOS menu bar companion and open full map details when a tag checks in.

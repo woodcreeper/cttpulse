@@ -89,18 +89,20 @@ Default behavior after loading projects/devices is inclusive: all accessible dev
 
 ## Island Window
 
-The island is not ActivityKit. It is an AppKit floating panel driven by `IslandPanelController`.
+The island is an AppKit floating panel driven by `IslandPanelController`. Product and store copy should describe it as a macOS menu bar/notch companion or top-center companion, not as an iOS feature.
 
 Key behavior:
 
 - borderless/nonactivating panel,
 - fixed frame to avoid left/right shifting,
-- positioned around the primary screen notch/top center,
+- positioned around the primary screen notch when available, or top center of the visible menu bar area on Macs without a notch,
 - joins normal Spaces,
 - avoids full-screen auxiliary behavior,
 - expands/collapses through SwiftUI state.
 
 `NotchHoverMonitor` watches a top-center hotspot and asks `IslandPanelState` to show a hover preview. The hover preview is visual only; the user still clicks to expand the island.
+
+The menu bar item, settings window, and main detail window are independent access paths, so the app remains usable on non-notched Macs and when the user never interacts with the hover hotspot.
 
 ## Map Semantics
 

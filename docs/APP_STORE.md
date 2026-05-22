@@ -104,10 +104,34 @@ Keep the SwiftPM package as the source of truth for tests and fast local develop
 
 ## App Review Risks To Validate
 
-- The notch-adjacent floating panel should be described as a menu bar/notch companion, not as iOS Dynamic Island.
-- The app must remain useful on Macs without a notch.
+- The top-center floating panel should be described as a macOS menu bar/notch companion. Avoid iOS-only feature names in store copy.
+- The app must remain useful on Macs without a notch through the menu bar item, settings window, and main detail window.
 - Sandbox behavior must be tested with Keychain storage, CTT network calls, MapKit, notifications, and the outside-click monitor.
 - App Store metadata must not include customer credentials, PATs, screenshots with sensitive telemetry, or private project names.
+
+## Store Metadata Guardrails
+
+Store-facing text lives in `Config/AppStore/Metadata/`. Use those files as the source for App Store Connect fields unless the final business/legal review changes the copy.
+
+Metadata rules:
+
+- Describe CTT Pulse as a macOS menu bar/notch companion or top-center companion.
+- Do not use iOS-only feature names.
+- Do not include real customer credentials, API tokens, project names, device aliases, animal names, email addresses, or precise active field coordinates.
+- Use only sanitized demo screenshots staged under `Config/AppStore/Screenshots/`.
+
+The preflight script scans the metadata files and screenshot filenames for high-risk wording before upload prep.
+
+## Sandbox QA
+
+Before submitting a build, run or manually verify these sandbox-sensitive flows from the Xcode-built app:
+
+- Keychain: save API access, quit, relaunch, and confirm the app reconnects without re-entering the token.
+- CTT network: refresh account/projects/devices from the CTT customer API.
+- MapKit: open a selected device with coordinates and confirm the map tiles and point popovers render.
+- Notifications: enable macOS notifications and verify a test/fresh event appears through Notification Center.
+- Outside-click monitor: open the top-center panel, click outside it, and confirm it dismisses without trapping focus.
+- Non-notch access: open the app on a display without a camera notch or with the panel ignored, then confirm the menu bar item, settings window, and main detail window cover the full workflow.
 
 ## First Submission Checklist
 

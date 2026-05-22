@@ -61,7 +61,7 @@ The Notifications section controls where alerts appear and which telemetry event
 
 Display options:
 
-- Show in CTT Pulse: pulses and reveals the compact island near the notch.
+- Show in CTT Pulse: pulses and reveals the compact top-center island near the menu bar/notch area.
 - Keep in-app alerts visible until dismissed: leaves the island visible until the close control is used instead of auto-hiding after 12 seconds.
 - Show macOS notifications: sends standard Notification Center banners outside the app.
 

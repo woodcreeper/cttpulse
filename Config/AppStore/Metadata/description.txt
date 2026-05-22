@@ -1,0 +1,13 @@
+CTT Pulse is a native macOS companion for researchers and teams using Cellular Tracking Technologies telemetry devices.
+
+Connect with your CTT Data Portal API access, choose the projects and devices you want to monitor, and keep recent check-ins available from a compact top-center panel, the menu bar, and a full detail window.
+
+Features:
+- Monitor selected CTT projects and devices.
+- Receive fresh check-in alerts without replaying stale records on launch.
+- Choose in-app alerts, macOS notifications, or both.
+- View recent check-ins in a scrollable list.
+- Open MapKit location views with GPS and Cell Locate fix labels.
+- Store API access securely in the macOS Keychain.
+
+CTT Pulse is designed for quick awareness during field and operations work while leaving detailed analysis in your existing CTT workflows.
