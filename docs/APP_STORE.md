@@ -46,6 +46,7 @@ The repo includes these distribution prep files:
 - `Resources/Assets.xcassets/AppIcon.appiconset`
 - `Resources/CTTPulse.icns`
 - `Resources/PrivacyInfo.xcprivacy`
+- `Config/AppStore/ExportOptions.plist`
 - `script/app_store_preflight.sh`
 
 The entitlements enable:
@@ -120,3 +121,22 @@ xcodebuild -scheme "CTT Pulse" -configuration Release -destination 'platform=mac
 ```
 
 Then archive and upload from Xcode using Product -> Archive once the App Store Connect app record, signing certificate/profile, icon, privacy details, and screenshots are ready.
+
+Command-line archive/upload path:
+
+```bash
+xcodebuild -scheme "CTT Pulse" \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath "$PWD/build/AppStore/CTT Pulse.xcarchive" \
+  -allowProvisioningUpdates \
+  archive
+
+xcodebuild -exportArchive \
+  -archivePath "$PWD/build/AppStore/CTT Pulse.xcarchive" \
+  -exportPath "$PWD/build/AppStore/Upload" \
+  -exportOptionsPlist "$PWD/Config/AppStore/ExportOptions.plist" \
+  -allowProvisioningUpdates
+```
+
+The App Store Connect app record must already exist for bundle ID `com.celltracktech.CTTPulse`; otherwise export/upload fails while downloading app information.
